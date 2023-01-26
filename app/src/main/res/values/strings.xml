@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">Blades</string>
+    <string name="main_menu_opt1">Añadir Blade</string>
+    <string name="main_menu_opt2">Listar Usuarios</string>
+    <string name="add_blade_name">Nombre</string>
+    <string name="add_blade_submit">Guardar</string>
+    <string name="collection_blades">blades</string>
+    <string name="add_blade_success_res">Se ha guardado con éxito</string>
+    <string name="add_blade_error_res">Ha ocurrido un error</string>
+    <string name="confirmation_button">Ok</string>
+    <string name="main_menu_home">Inicio</string>
+    <string name="login">Iniciar sesión</string>
+    <string name="logout">Cerrar sesión</string>
+    <string name="collection_users">users</string>
+    <string name="error_generic">Algo ha ocurrido mal</string>
+    <string name="list_users_action">Ver Blades</string>
+    <string name="blade_list">"Colección"</string>
+    <string name="list_blades_own">Ver mis Blades</string>
+    <string name="add_blade_description">Descripción</string>
+</resources>
