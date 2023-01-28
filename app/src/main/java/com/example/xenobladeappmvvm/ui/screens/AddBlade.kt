@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -17,17 +18,15 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.xenobladeappmvvm.R
 import com.example.xenobladeappmvvm.ui.TopBar
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.SetOptions
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.toSize
+import com.example.xenobladeappmvvm.ui.viewmodel.AddBladeViewModel
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
-fun AddBlade(navController: NavController) {
+fun AddBlade(navController: NavController, viewModel: AddBladeViewModel) {
     Scaffold(topBar = {
         TopBar(
             navController = navController,
@@ -35,20 +34,15 @@ fun AddBlade(navController: NavController) {
         )
     }) {
 
-        val auth = FirebaseAuth.getInstance()
-        val db = FirebaseFirestore.getInstance()
-        val usersCollectionName = stringResource(id = R.string.collection_users)
-        val bladesCollectionName = stringResource(id = R.string.collection_blades)
-
         // STATES
-        var name by rememberSaveable { mutableStateOf("") }
-        var description by rememberSaveable { mutableStateOf("") }
-        var isResponse by rememberSaveable { mutableStateOf(false) }
-        var responseMessage by rememberSaveable { mutableStateOf("") }
-        var isLoading by rememberSaveable { mutableStateOf(false) }
+        val name: String by viewModel.name.observeAsState("")
+        val description : String by viewModel.description.observeAsState("")
 
-        val successMessage = stringResource(id = R.string.add_blade_success_res)
-        val errorMessage = stringResource(id = R.string.add_blade_error_res)
+
+        val isLoading by viewModel.isLoading.observeAsState(false)
+        val isResponse by viewModel.isResponse.observeAsState(false)
+        val responseMessage by viewModel.responseMessage.observeAsState("")
+
         val focusManager = LocalFocusManager.current
 
 
@@ -60,13 +54,13 @@ fun AddBlade(navController: NavController) {
         ) {
             OutlinedTextField(
                 value = name,
-                onValueChange = { name = it },
+                onValueChange = { viewModel.onChangeName(it) },
                 label = { Text(text = stringResource(id = R.string.add_blade_name)) },
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.size(20.dp))
             OutlinedTextField(value = description,
-                onValueChange = { description = it },
+                onValueChange = { viewModel.onChangeDescription(it) },
                 label = { Text(text = stringResource(id = R.string.add_blade_description)) },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -76,19 +70,9 @@ fun AddBlade(navController: NavController) {
 
 
             var expanded by remember { mutableStateOf(false) }
-            val items = listOf(
-                "Luz",
-                "Oscuridad",
-                "Fuego",
-                "Agua",
-                "Electricidad",
-                "Tierra",
-                "Viento",
-                "Hielo"
-            )
+            val items : List<String> = viewModel.items
 
-
-            var element by rememberSaveable { mutableStateOf("") }
+            val element: String by viewModel.element.observeAsState("")
 
             var textFieldSizeDropDownMenu by remember { mutableStateOf(Size.Zero)}
 
@@ -122,7 +106,7 @@ fun AddBlade(navController: NavController) {
             ) {
                 items.forEach { label ->
                     DropdownMenuItem(onClick = {
-                        element = label
+                        viewModel.onChangeElement(label)
                         expanded = false
                     }) {
                         Text(text = label)
@@ -131,57 +115,16 @@ fun AddBlade(navController: NavController) {
             }
             Spacer(modifier = Modifier.size(20.dp))
 
-            val data = hashMapOf(
-                "name" to name.toString().trim(),
-                "description" to description.toString().trim(),
-                "element" to element.toString()
-            )
-
-            val user = auth.currentUser?.email
-
-            val userData = hashMapOf(
-                "email" to user
-            )
-
+//
             Button(onClick = {
-                isLoading = true
-                if (user != null) {
-
-                    db.collection(usersCollectionName)
-                        .document(user)
-                        .set(userData, SetOptions.merge())
-                        .addOnSuccessListener {
-                            db.collection(usersCollectionName)
-                                .document(user)
-                                .collection(bladesCollectionName)
-                                .document(name.toString().trim().lowercase())
-                                .set(data, SetOptions.merge())
-                                .addOnSuccessListener {
-                                    responseMessage = successMessage
-                                }
-                                .addOnFailureListener {
-                                    responseMessage = errorMessage
-                                }
-                                .addOnCompleteListener {
-                                    isLoading = false
-                                    isResponse = true
-                                }
-                        }
-                        .addOnFailureListener {
-                            responseMessage = errorMessage
-                        }
-
-                }
+                viewModel.createBlade()
             }) {
                 Text(text = stringResource(id = R.string.add_blade_submit))
             }
 
             if (isResponse) {
                 PopUpResponse(response = responseMessage) {
-                    isResponse = false
-                    name = ""
-                    description = ""
-                    element = ""
+                    viewModel.responseHandled()
                     focusManager.clearFocus()
                 }
             }
