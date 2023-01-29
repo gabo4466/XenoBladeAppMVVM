@@ -10,6 +10,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.xenobladeappmvvm.ui.screens.*
 import com.example.xenobladeappmvvm.ui.viewmodel.AddBladeViewModel
+import com.example.xenobladeappmvvm.ui.viewmodel.ListBladesViewModel
+import com.example.xenobladeappmvvm.ui.viewmodel.ListUsersViewModel
 
 @Composable
 fun AppNavigation() {
@@ -18,12 +20,8 @@ fun AppNavigation() {
         composable(AppScreens.MainMenu.route) { MainMenu(navigationController) }
         composable(AppScreens.AddBlade.route) { AddBlade(navigationController, AddBladeViewModel()) }
         composable(AppScreens.Login.route) { Login(navigationController) }
-        composable(AppScreens.ListUsers.route) { ListUsers(navigationController) }
+        composable(AppScreens.ListUsers.route) { ListUsers(navigationController, ListUsersViewModel(navigationController)) }
         composable(AppScreens.ListBlades.route + "/{email}", arguments = listOf(navArgument(name = "email"){type=
-            NavType.StringType})) { ListBlades(navigationController, it.arguments?.getString("email")) }
-//        composable(AppScreens.ModificarCliente.ruta) {ModificarCliente(navigationController) }
-//        composable(AppScreens.BorrarCliente.ruta) { BorrarCliente(navigationController) }
-//        composable(AppScreens.ConsultarCliente.ruta) {ConsultarCliente(navigationController) }
-//        composable(AppScreens.InformeClientes.ruta) {InformeClientes(navigationController) }
+            NavType.StringType})) { ListBlades(navigationController, ListBladesViewModel(navigationController, it.arguments?.getString("email"))) }
     }
 }

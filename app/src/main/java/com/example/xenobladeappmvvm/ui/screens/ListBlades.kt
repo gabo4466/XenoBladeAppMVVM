@@ -10,6 +10,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -23,58 +24,29 @@ import com.example.xenobladeappmvvm.model.Blade
 import com.example.xenobladeappmvvm.ui.TopBar
 import com.example.xenobladeappmvvm.ui.theme.Gray200
 import com.example.xenobladeappmvvm.ui.theme.Gray500
+import com.example.xenobladeappmvvm.ui.viewmodel.ListBladesViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
-fun ListBlades(navController: NavController, email: String?) {
+fun ListBlades(navController: NavController, viewModel: ListBladesViewModel) {
 
-    val auth = FirebaseAuth.getInstance()
-    val userLogged = auth.currentUser?.email
-    var user by rememberSaveable { mutableStateOf("") }
-    val bladesCollectionName = stringResource(id = R.string.collection_blades)
-    val usersCollectionName = stringResource(id = R.string.collection_users)
-    val blades = rememberSaveable { mutableListOf<Blade>() }
-    val error = stringResource(id = R.string.error_generic)
-    var message by rememberSaveable { mutableStateOf("") }
-    var messageDelete by rememberSaveable { mutableStateOf("") }
-    var isResponse by rememberSaveable { mutableStateOf(false) }
-    var isLoading by rememberSaveable { mutableStateOf(true) }
+    val userLogged by viewModel.user.observeAsState("")
+    val user = viewModel.email
+    val blades by viewModel.blades.observeAsState(mutableListOf())
 
-    val db = FirebaseFirestore.getInstance()
-
-    if (email != null) {
-        db.collection(usersCollectionName)
-            .document(email)
-            .collection(bladesCollectionName)
-            .get()
-            .addOnSuccessListener {
-                blades.clear()
-                for (blade in it) {
-                    val auxBlade = Blade(blade.id, blade.get("name") as String, blade.get("description") as String?, blade.get("element") as String?)
-                    blades.add(auxBlade)
-                }
-            }
-            .addOnFailureListener {
-                message = error
-            }
-            .addOnCompleteListener {
-                isLoading = false
-            }
-    }
-
-    email?.let {
-        user = it
-    }
+    val message by viewModel.message.observeAsState("")
+    val messageDelete by viewModel.messageDelete.observeAsState("")
+    val isResponse by viewModel.isResponse.observeAsState(false)
+    val isLoading by viewModel.isLoading.observeAsState(true)
+    viewModel.loadBlades()
 
     if (isResponse){
         PopUpConfirmation(text = messageDelete) {
-            isResponse = false
-            messageDelete = ""
+            viewModel.responseHandled()
         }
     }
-
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -101,35 +73,17 @@ fun ListBlades(navController: NavController, email: String?) {
                     .padding(bottom = 30.dp),
             ) {
                 blades.forEachIndexed { index, blade ->
-                    var colorCell: Color
-                    if (index % 2 == 0) {
-                        colorCell = Gray200
+                    val colorCell: Color = if (index % 2 == 0) {
+                        Gray200
                     }else {
-                        colorCell = Gray500
+                        Gray500
                     }
                     var delete = false
                     if (userLogged == user){
                         delete = true
                     }
                     BladeItem(blade = blade, color = colorCell, delete = delete) {
-                        isLoading = true
-                        if (email != null) {
-                            db.collection(usersCollectionName)
-                                .document(email)
-                                .collection(bladesCollectionName)
-                                .document(blade.id)
-                                .delete()
-                                .addOnSuccessListener {
-                                    messageDelete = "Se ha eliminado con exito"
-                                }
-                                .addOnFailureListener {
-                                    messageDelete = error
-                                }
-                                .addOnCompleteListener {
-                                    isLoading = false
-                                    isResponse = true
-                                }
-                        }
+                        viewModel.deleteBlade(blade.id)
                     }
                 }
 
@@ -151,7 +105,9 @@ fun BladeItem(blade: Blade, color: Color, delete: Boolean, deleteButtonAction: (
         Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(text = blade.name, color = Color.Black, style = MaterialTheme.typography.h5)
             blade.getColorElement()?.let {
-                blade.element?.let { Text(text = it, color = Color.Black, modifier = Modifier.background(color = blade.getColorElement()!!, shape = RoundedCornerShape(5.dp)).padding(10.dp)) }
+                blade.element?.let { Text(text = it, color = Color.Black, modifier = Modifier
+                    .background(color = blade.getColorElement()!!, shape = RoundedCornerShape(5.dp))
+                    .padding(10.dp)) }
             }
         }
         blade.description?.let {

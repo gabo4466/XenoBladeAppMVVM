@@ -36,7 +36,7 @@ fun AddBlade(navController: NavController, viewModel: AddBladeViewModel) {
 
         // STATES
         val name: String by viewModel.name.observeAsState("")
-        val description : String by viewModel.description.observeAsState("")
+        val description: String by viewModel.description.observeAsState("")
 
 
         val isLoading by viewModel.isLoading.observeAsState(false)
@@ -59,7 +59,8 @@ fun AddBlade(navController: NavController, viewModel: AddBladeViewModel) {
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(modifier = Modifier.size(20.dp))
-            OutlinedTextField(value = description,
+            OutlinedTextField(
+                value = description,
                 onValueChange = { viewModel.onChangeDescription(it) },
                 label = { Text(text = stringResource(id = R.string.add_blade_description)) },
                 modifier = Modifier
@@ -70,11 +71,11 @@ fun AddBlade(navController: NavController, viewModel: AddBladeViewModel) {
 
 
             var expanded by remember { mutableStateOf(false) }
-            val items : List<String> = viewModel.items
+            val items: List<String> = viewModel.items
 
             val element: String by viewModel.element.observeAsState("")
 
-            var textFieldSizeDropDownMenu by remember { mutableStateOf(Size.Zero)}
+            var textFieldSizeDropDownMenu by remember { mutableStateOf(Size.Zero) }
 
             val icon = if (expanded)
                 Icons.Filled.KeyboardArrowUp
@@ -88,13 +89,16 @@ fun AddBlade(navController: NavController, viewModel: AddBladeViewModel) {
                     .onGloballyPositioned { coordinates ->
                         textFieldSizeDropDownMenu = coordinates.size.toSize()
                     },
-                colors = TextFieldDefaults.textFieldColors(disabledLabelColor = MaterialTheme.colors.secondary, disabledIndicatorColor = MaterialTheme.colors.secondary),
+                colors = TextFieldDefaults.textFieldColors(
+                    disabledLabelColor = MaterialTheme.colors.secondary,
+                    disabledIndicatorColor = MaterialTheme.colors.secondary
+                ),
                 value = element,
-                onValueChange = {  },
+                onValueChange = { },
                 readOnly = true,
-                label = {Text("Elemento", Modifier.clickable { expanded = !expanded })},
+                label = { Text("Elemento", Modifier.clickable { expanded = !expanded }) },
                 trailingIcon = {
-                    Icon(icon,"contentDescription",
+                    Icon(icon, "contentDescription",
                         Modifier.clickable { expanded = !expanded })
                 }
             )
@@ -102,7 +106,7 @@ fun AddBlade(navController: NavController, viewModel: AddBladeViewModel) {
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
                 modifier = Modifier
-                    .width(with(LocalDensity.current){textFieldSizeDropDownMenu.width.toDp()})
+                    .width(with(LocalDensity.current) { textFieldSizeDropDownMenu.width.toDp() })
             ) {
                 items.forEach { label ->
                     DropdownMenuItem(onClick = {

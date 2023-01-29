@@ -5,10 +5,12 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.xenobladeappmvvm.model.Blade
 import com.example.xenobladeappmvvm.model.providers.firebase.BladeFireStore
+import com.google.firebase.auth.FirebaseAuth
 
 class AddBladeViewModel: ViewModel() {
 
     private val bladeFireStore = BladeFireStore()
+    private val auth = FirebaseAuth.getInstance()
     private val _blade = Blade("","","","")
 
     // TODO: SHOULD LOAD FROM DB
@@ -72,20 +74,25 @@ class AddBladeViewModel: ViewModel() {
     }
 
     fun createBlade(){
+        val user = auth.currentUser?.email
         _isLoading.value = true
-        bladeFireStore.createBlade(blade = _blade, onCompleteBehavior = {
-            _isLoading.value = false
-            _isResponse.value = true
-            _name.value = ""
-            _description.value = ""
-            _element.value = ""
-        },
-        onSuccessBehavior = {
-            _responseMessage.value = _successMessage
-        },
-        onFailureBehavior = {
-            _responseMessage.value = _errorMessage
-        })
+
+        if (user != null) {
+            bladeFireStore.createBlade(blade = _blade, user = user,onCompleteBehavior = {
+                _isLoading.value = false
+                _isResponse.value = true
+                _name.value = ""
+                _description.value = ""
+                _element.value = ""
+            },
+                onSuccessBehavior = {
+                    _responseMessage.value = _successMessage
+                },
+                onFailureBehavior = {
+                    _responseMessage.value = _errorMessage
+                })
+        }
+
     }
 
 }
